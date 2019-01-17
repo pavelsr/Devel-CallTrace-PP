@@ -28,6 +28,8 @@ sub handler {
 	my $stat = {};
 
 	my @lines = read_file($filename);
+	$_ =~ s/\n// for (@lines);
+	
 	$stat->{'lines_initially'} = scalar @lines;
 	
 	# filter anonymous calls
@@ -35,9 +37,17 @@ sub handler {
 	
 	my @uniq_calls = map { extract_call($_) } @lines;
 	
+	# my @uniq_mod_paths = uniq map { substr_file_line($_) } @lines;
+	# warn Dumper \@uniq_mod_paths; 
+	
 	if ($opts->hide_constants) {
 		@lines = grep { substr_method(extract_call($_)) !~ /[A-Z0-9_]+/ } @lines;
 	}
+	
+	if ( $opts->hide_cpan || $opts->hide_core ) {
+		@lines = grep { substr_file_line($_) !~ /perl/ } @lines;
+	}
+	
 	
 	#### FILTER MODULES
 	
@@ -61,10 +71,14 @@ sub handler {
 	
 	$stat->{'uniq_modules_filtered'} = [ @modules ];
 	@lines = grep { isin(substr_module_name(extract_call($_)), \@modules) } @lines;
+		
+	if ( $opts->rle ) {
+		@lines = rle(@lines);
+	}
 	
 	$stat->{'lines_in_result'} = scalar @lines;
 	$stat->{'lines_filtered'} = $stat->{'lines_initially'} - $stat->{'lines_in_result'};
-	$stat->{'uniq_calls_all'} = [ uniq @uniq_calls ];	# non anonumous
+	$stat->{'uniq_calls_all'} = [ uniq @uniq_calls ];	# all non anonumous
 	$stat->{'uniq_calls_filtered'} = [ uniq @lines ];
 	
 	if ( $opts->just_uniq_calls ) {
@@ -73,16 +87,18 @@ sub handler {
 		# exit;
 	}
 	
+	print "$_\n" for ( @lines );
+	
 	if ( $opts->verbose ) {
 		print "### DEBUG\n";
 		print "Trace has ".$stat->{'lines_initially'}." lines initially\n";
 		my $percentage = round 100 * $stat->{'lines_filtered'} / $stat->{'lines_initially'};
 		print $stat->{'lines_filtered'}." lines was filtered - ".$percentage."%\n";
+		print scalar @lines." lines left \n";
 		
-		# print "### SOURCES: \n";
-		# print "$_\n" for ( @{$stat->{'sources'}} );
+		print '### @INC :'."\n";
+		print "$_\n" for @INC;
 	}
-	
 }
 
 1;

@@ -8,18 +8,72 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
 	substr_method
 	substr_module_name
-	is_cpan_published
+	substr_file_line
+	is_cpan_publishedЫ
 	is_core
 	isin
+	rle
+	str_has_multiplier
+	str_minus_multiplier
+	str_add_multiplier
 );
 our %EXPORT_TAGS = ( 'ALL' => [ @EXPORT_OK ] );
 
 my $mcpan = MetaCPAN::Client->new( version => 'v1' );
 
-sub get_sources {
-	my ( $val ) = @_;
-	if ( $val =~ /\s+((\w|:)+)/ ) {
+
+# return '2' if 'abc (x2)'
+sub str_has_multiplier {
+	my ( $str ) = @_;
+	if ( $str =~ /\(x(\d+)\)(\n?)$/ ) {
 		return $1;
+	}
+	return;
+}
+
+# return string without multiplier
+sub str_minus_multiplier {
+	my ( $str ) = @_;
+	$str =~ s/\(x(\d+)\)//;
+	return $str;
+}
+
+sub str_add_multiplier {
+	my ( $str, $num ) = @_;
+	$num = 1 if !defined $num;
+	if ( my $n = str_has_multiplier($str) ) {
+		$str = str_minus_multiplier($str);
+		my $new_m = $n+$num;
+		$str.= '(x'.$new_m.')';
+	} else {
+		$str.= ' (x2)';
+	}
+	return $str;
+}
+
+sub rle {
+	my ( @a ) = @_;
+	
+	my @rle;
+
+	for (my $i = 0; $i < @a;) {
+	    my $j = 1;
+
+	    for (; $j + $i < @a && $a[$j+$i] eq $a[$i]; $j++){}
+
+	    push @rle, $a[$i] . ($j > 1 ? " (x$j)" : "");
+	    $i += $j;
+	}
+	
+	return @rle;
+}
+
+
+# 'XPortal::General::xmlescape (/media/sf_FictionHub/XPortal/General.pm:441-446)'
+sub substr_file_line {
+	my ( $val ) = @_;
+	if ( $val =~ /[\w|:]+\s+\(((.*)\/)/ ) {
+		return $2;
 	}
 	return;
 }
