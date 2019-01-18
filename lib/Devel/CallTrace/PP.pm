@@ -1,10 +1,6 @@
 package Devel::CallTrace::PP;
 
-=head1
-
 # ABSTRACT: Main module of dctpp
-
-=cut
 
 use File::Slurp;
 use Data::Dumper;
