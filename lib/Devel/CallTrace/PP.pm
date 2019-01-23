@@ -1,6 +1,6 @@
 package Devel::CallTrace::PP;
 
-# ABSTRACT: Main module of dctpp
+# ABSTRACT: Main module for dctpp CLI tool
 
 use File::Slurp;
 use Data::Dumper;

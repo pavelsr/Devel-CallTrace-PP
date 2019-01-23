@@ -1,3 +1,5 @@
+#!/usr/bin/env perl
+
 package dctpp;
 
 # ABSTRACT: Postprocessor of Devel::CallTrace output
@@ -11,6 +13,41 @@ package dctpp;
 
 	perl -d:CallTrace x.pl > /dev/null | tee trace.txt | dctpp trace.txt | tee trace_processed.txt
 	
+=head1 AVAILABLE OPTIONS
+
+Options that are enabled by default are marked as (1)
+
+See dctpp --help for more info
+
+=over
+=item hide_cpan
+Hide from trace modules that are alredy published on CPAN, using L<Devel::CallTrace::Utils/is_cpan_published> (based on L<MetaCPAN::Client>)
+=item hide_core (1) 
+Hide from trace modules that are CORE for installed Perl version (using L<Module::CoreList>)
+=item hide_constants (1)
+Hide constants from trace assumed that constant is method that is fully named in capital case
+=item hide_lineno
+Hide in filtered trace path to module file and line number
+=item just_uniq_modules
+Prints only unique modules in order when trey called in trace. Each module printed once.
+=item just_uniq_calls
+Prints only unique calls. Each call printed once.
+=item rle (1)
+Fold module calls. E.g
+    
+    Foo::bar::baz
+    Foor::bar::baz
+    
+Will be printed as
+
+    Foo::bar::baz (x2)
+    
+=item verbose
+
+Prints some additional debug info, e.g. @INC, how much lines left and how much was filtered
+
+=back
+
 =cut
 
 use strict;
